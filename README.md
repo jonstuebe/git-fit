@@ -22,11 +22,11 @@ provides capabilities for pulling and pushing these assets to/from S3.
 ## Alternatives ##
 
 1. [git-media](https://github.com/schacon/git-media): Uses smudge/clean filters,
-   which has has a sometimes unintuitive execution model and can easily get
-   your assets in a bad state. You should expect significantly worse
-   performance from git-media as well, as since it uses smudge/clean filters,
+   which has a sometimes unintuitive execution model and can easily get your
+   assets in a bad state. You should expect significantly worse performance
+   from git-media as well. And since it uses smudge/clean filters,
    it will execute frequently throughout the day - even when you'd expect it
-   not to - e.g. on `git diff`.
+   not to (e.g. on `git diff`) - potentially slowing down your daily workflow.
 2. [git-fat](https://github.com/jedbrown/git-fat): Uses smudge/clean filters
    as well. Better maintained than git-media, but only supports rsync.
 3. [git-annex](https://git-annex.branchable.com/): By far the most flexible
