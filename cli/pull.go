@@ -1,8 +1,6 @@
 package cli
 
 import (
-    "os"
-    "fmt"
     "github.com/dailymuse/git-fit/transport"
     "github.com/dailymuse/git-fit/config"
     "github.com/dailymuse/git-fit/util"
@@ -35,7 +33,7 @@ func Pull(schema config.Config, trans transport.Transport, args []string) {
 
         for path := range schema {
             if util.FileExists(path) {
-                fmt.Fprintf(os.Stderr, "%s: Not overwriting because the file already exists. If you wish to overwrite the current contents, explicitly include the file path as an argument\n", path)
+                util.Error("%s: Not overwriting because the file already exists. If you wish to overwrite the current contents, explicitly include the file path as an argument\n", path)
             } else {
                 paths = append(paths, path)
             }
@@ -43,7 +41,7 @@ func Pull(schema config.Config, trans transport.Transport, args []string) {
     } else {
         for _, path := range paths {
             if _, ok := schema[path]; !ok {
-                panic(fmt.Sprintf("%s: no entry in the config %s", path, config.FILE_PATH))
+                util.Fatal("%s: no entry in the config %s\n", path, config.FILE_PATH)
             }
         }
     }
@@ -59,11 +57,11 @@ func Pull(schema config.Config, trans transport.Transport, args []string) {
         res := <- responseChan
 
         if res.err != nil {
-            fmt.Fprintf(os.Stderr, "%s: Could not download: %s\n", res.file.Path, res.err.Error())
+            util.Error("%s: Could not download: %s\n", res.file.Path, res.err.Error())
         } else if !res.synced {
-            fmt.Fprintf(os.Stderr, "%s: Already synced\n", res.file.Path)
+            util.Error("%s: Already synced\n", res.file.Path)
         } else {
-            fmt.Printf("%s: Downloaded\n", res.file.Path)
+            util.Message("%s: Downloaded\n", res.file.Path)
         }
     }
 }

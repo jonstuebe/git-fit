@@ -1,8 +1,6 @@
 package cli
 
 import (
-    "os"
-    "fmt"
     "github.com/dailymuse/git-fit/transport"
     "github.com/dailymuse/git-fit/config"
     "github.com/dailymuse/git-fit/util"
@@ -50,11 +48,11 @@ func Push(schema config.Config, trans transport.Transport, args []string) {
         res := <- responseChan
 
         if res.err != nil {
-            fmt.Fprintf(os.Stderr, "%s: Could not upload: %s\n", res.file.Path, res.err.Error())
+            util.Error("%s: Could not upload: %s\n", res.file.Path, res.err.Error())
         } else if !res.synced {
-            fmt.Fprintf(os.Stderr, "%s: Already synced\n", res.file.Path)
+            util.Error("%s: Already synced\n", res.file.Path)
         } else {
-            fmt.Printf("%s: Uploaded\n", res.file.Path)
+            util.Message("%s: Uploaded\n", res.file.Path)
 
             schema[res.file.Path] = config.ConfigEntry {
                 Commit: res.file.CommitHash,

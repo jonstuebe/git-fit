@@ -67,7 +67,7 @@ func LoadConfig() (Config, error) {
 func validateConfig(config Config) error {
     for path, value := range config {
         if len(value.Commit) != 40 {
-            return errors.New(fmt.Sprintf("Invalid SHA hash for the file %s in %s: %s", path, FILE_PATH, value.Commit))
+            return errors.New(fmt.Sprintf("Invalid SHA hash for config entry %s: %s", path, value.Commit))
         }
     }
 
