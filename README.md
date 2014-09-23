@@ -27,8 +27,8 @@ provides capabilities for pulling and pushing these assets to/from S3.
    performance from git-media as well, as since it uses smudge/clean filters,
    it will execute frequently throughout the day - even when you'd expect it
    not to - e.g. on `git diff`.
-2. [git-fat](github.com/jedbrown/git-fat): Uses smudge/clean filters as well.
-   Better maintained than git-media, but only supports rsync.
+2. [git-fat](https://github.com/jedbrown/git-fat): Uses smudge/clean filters
+   as well. Better maintained than git-media, but only supports rsync.
 3. [git-annex](https://git-annex.branchable.com/): By far the most flexible
    tool, but not very intuitive. Depending your needs this may be a better
    fit - especially if you're looking for something more than just fat asset
