@@ -2,10 +2,12 @@ package transport
 
 import (
     "github.com/mitchellh/goamz/s3"
+    "github.com/dailymuse/git-fit/util"
     "io"
     "fmt"
     "crypto/md5"
     "encoding/hex"
+    "errors"
 )
 
 const MULTIPART_CHUNK_SIZE = 8 * 1024 * 1024
@@ -57,11 +59,18 @@ func (self S3Transport) Upload(file RemotableFile) error {
 }
 
 func (self S3Transport) LocalHash(file RemotableFile) (string, error) {
+    if util.FileExists(file.Path) {
+        if util.IsDirectory(file.Path) {
+            return "", errors.New("file cannot be a directory")
+        }
+    } else {
+        return "", nil
+    }
+
     contents, err := file.GetFile()
 
     if err != nil {
-        //return "", err
-        panic(err)
+        return "", err
     }
 
     overallHasher := md5.New()
@@ -74,8 +83,7 @@ func (self S3Transport) LocalHash(file RemotableFile) (string, error) {
         n, err := io.ReadFull(contents, chunk)
 
         if err != nil && err != io.ErrUnexpectedEOF {
-            //return "", err
-            panic(err)
+            return "", err
         }
 
         if n > 0 {
