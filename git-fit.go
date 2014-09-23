@@ -39,13 +39,16 @@ func affixToGitRepo() {
     gitDirectory, err := filepath.Abs(util.GitDir())
 
     if err != nil {
-        panic(err)
+        fmt.Fprintf(os.Stderr, "Could not determine the repo root: %s\n", err.Error())
+        os.Exit(1)
     } else if !util.IsDirectory(gitDirectory) {
-        panic("Not in a git repository")
+        fmt.Fprintf(os.Stderr, "Not in a git repository\n")
+        os.Exit(1)
     }
 
     if err = os.Chdir(filepath.Join(gitDirectory, "..")); err != nil {
-        panic(err)
+        fmt.Fprintf(os.Stderr, "Could not change the working directory to the repo root (%s): %s\n", gitDirectory, err.Error())
+        os.Exit(1)
     }
 }
 
@@ -53,7 +56,8 @@ func getTransport() transport.Transport {
     auth, err := aws.GetAuth(util.GitConfig("git-fit.aws.access-key"), util.GitConfig("git-fit.aws.secret-key"))
 
     if err != nil {
-        panic(err)
+        fmt.Fprintf(os.Stderr, "AWS authentication failed: %s\n", err.Error())
+        os.Exit(1)
     }
 
     bucket := s3.New(auth, aws.USEast).Bucket(util.GitConfig("git-fit.aws.bucket"))
@@ -89,7 +93,7 @@ func main() {
             cli.Pull(schema, trans, os.Args[2:])
         default:
             fmt.Printf("Unknown command")
-            help(1)
+            help(-1)
         }
     }
 
