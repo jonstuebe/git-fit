@@ -14,19 +14,19 @@ repository. This metadata is used to figure out what assets to pull from /
 push to S3. The assets themselves are automatically added to `.gitignore` by
 `git-fit`, so they're not at all stored on git.
 
-### Why Not Use Smudge/Clean Filters? ###
+#### Why Not Use Smudge/Clean Filters? ####
 
 There are a few tools out there
 ([git-media](https://github.com/schacon/git-media) being maybe the most
 popular) that use smudge/clean filters to handle large assets. This allows the
 tools to integrate into a normal git workflow, but there are some consequences
 that bit us. Smudge/clean filters have a sometimes unintuitive execution
-model, and can easily get your assets in a bad state. Furthermore, tools using
+model, and can easily get your assets in a bad state. And tools using
 this technique will execute frequently throughout the day - even when you'd
 expect it not to (e.g. on `git diff`) - potentially slowing down your daily
 workflow.
 
-### Why Not Use git-annex? ###
+#### Why Not Use git-annex? ####
 
 [git-annex](https://git-annex.branchable.com/) is another popular tool for
 large asset management in git - it effectively invents its own git protocol
