@@ -4,23 +4,25 @@ import (
     "github.com/dailymuse/git-fit/transport"
     "github.com/dailymuse/git-fit/config"
     "github.com/dailymuse/git-fit/util"
-    "errors"
 )
 
 func upload(trans transport.Transport, file transport.RemotableFile, responseChan chan operationResponse) {
-    state, err := getRemotableFileState(trans, file)
+    actualHash, err := file.CalculateHash()
 
     if err != nil {
         responseChan <- newErrorOperationResponse(file, err)
-    } else if state & REMOTABLE_FILE_STATE_NO_LOCAL != 0 {
-        responseChan <- newErrorOperationResponse(file, errors.New("does not exist"))
-    } else if state & REMOTABLE_FILE_STATE_SAME != 0 {
-        responseChan <- newOperationResponse(file, false)
     } else {
-        if err = trans.Upload(file); err != nil {
-            responseChan <- newErrorOperationResponse(file, err)
+        actualFile := transport.NewRemotableFile(file.Path, actualHash)
+        exists, err := trans.Exists(actualFile)
+
+        if err != nil {
+            responseChan <- newErrorOperationResponse(actualFile, err)
+        } else if exists {
+            responseChan <- newOperationResponse(actualFile, false)
+        } else if err = trans.Upload(actualFile); err != nil {
+            responseChan <- newErrorOperationResponse(actualFile, err)
         } else {
-            responseChan <- newOperationResponse(file, true)
+            responseChan <- newOperationResponse(actualFile, true)
         }
     }
 }
@@ -36,20 +38,14 @@ func Push(schema *config.Config, trans transport.Transport, args []string) {
         }
     }
 
-    latestCommit := util.LatestCommit()
+    responseChan := make(chan operationResponse, len(paths))
 
-    if latestCommit == "HEAD" {
-        panic("There are no commits in this repo - make a commit first before using git-fit")
-    }
-
-    responseChan := make(chan operationResponse, len(args))
-
-    for _, path := range args {
-        remoteFile := transport.NewRemotableFile(latestCommit, path)
+    for _, path := range paths {
+        remoteFile := transport.NewRemotableFile(path, schema.Files[path])
         go upload(trans, remoteFile, responseChan)
     }
 
-    for i := 0; i < len(args); i++ {
+    for i := 0; i < len(paths); i++ {
         res := <- responseChan
 
         if res.err != nil {
@@ -58,8 +54,7 @@ func Push(schema *config.Config, trans transport.Transport, args []string) {
             util.Error("%s: Already synced\n", res.file.Path)
         } else {
             util.Message("%s: Uploaded\n", res.file.Path)
-
-            schema.Files[res.file.Path] = res.file.CommitHash
+            schema.Files[res.file.Path] = res.file.CommittedHash
         }
     }
 }

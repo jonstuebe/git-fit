@@ -24,10 +24,6 @@ func GitDir() string {
     return Stdout("git", "rev-parse", "--git-dir")
 }
 
-func LatestCommit() string {
-    return Stdout("git", "rev-parse", "HEAD")
-}
-
 func GitConfig(name string) string {
     return Stdout("git", "config", "--get", name)
 }

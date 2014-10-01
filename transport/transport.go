@@ -4,25 +4,25 @@ import (
     "io"
     "os"
     "fmt"
-    "crypto/md5"
+    "crypto/sha1"
     "encoding/hex"
     "github.com/dailymuse/git-fit/util"
 )
 
 type RemotableFile struct {
-    CommitHash string
     Path string
+    CommittedHash string
 }
 
-func NewRemotableFile(commitHash string, path string) RemotableFile {
+func NewRemotableFile(path string, committedHash string) RemotableFile {
     return RemotableFile {
-        CommitHash: commitHash,
         Path: path,
+        CommittedHash: committedHash,
     }
 }
 
 func (self RemotableFile) StandardName() string {
-    return fmt.Sprintf("%s_%s", self.Path, self.CommitHash)
+    return fmt.Sprintf("%s_%s", self.Path, self.CommittedHash)
 }
 
 func (self RemotableFile) GetFile() (*os.File, error) {
@@ -42,13 +42,13 @@ func (self RemotableFile) WriteFile(source io.Reader) error {
     return err
 }
 
-func (self RemotableFile) Hash() (string, error) {
+func (self RemotableFile) CalculateHash() (string, error) {
     if !util.IsFile(self.Path) {
         return "", nil
     }
 
     file, err := self.GetFile()
-    h := md5.New()
+    h := sha1.New()
 
     if err != nil {
         return "", err
@@ -66,6 +66,5 @@ func (self RemotableFile) Hash() (string, error) {
 type Transport interface {
     Upload(file RemotableFile) error
     Download(file RemotableFile) error
-    LocalHash(file RemotableFile) (string, error)
-    RemoteHash(file RemotableFile) (string, error)
+    Exists(file RemotableFile) (bool, error)
 }
