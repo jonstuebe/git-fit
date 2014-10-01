@@ -9,7 +9,7 @@ versions of an asset across different commits.
 ## How It Works ##
 
 `git-fit` doesn't use any special git techniques, hooks or features. All
-metadata about files are stored in `.git-fit.json` in the root of the
+metadata about files are stored in `git-fit.json` in the root of the
 repository. This metadata is used to figure out what assets to pull from /
 push to S3. The assets themselves are automatically added to `.gitignore` by
 `git-fit`, so they're not at all stored on git.

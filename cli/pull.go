@@ -25,13 +25,13 @@ func download(trans transport.Transport, file transport.RemotableFile, responseC
     }
 }
 
-func Pull(schema config.Config, trans transport.Transport, args []string) {
+func Pull(schema *config.Config, trans transport.Transport, args []string) {
     paths := args
 
     if len(paths) == 0 {
         paths = make([]string, 0)
 
-        for path := range schema {
+        for path := range schema.Files {
             if util.FileExists(path) {
                 util.Error("%s: Not overwriting because the file already exists. If you wish to overwrite the current contents, explicitly include the file path as an argument\n", path)
             } else {
@@ -40,7 +40,7 @@ func Pull(schema config.Config, trans transport.Transport, args []string) {
         }
     } else {
         for _, path := range paths {
-            if _, ok := schema[path]; !ok {
+            if _, ok := schema.Files[path]; !ok {
                 util.Fatal("%s: no entry in the config %s\n", path, config.FILE_PATH)
             }
         }
@@ -49,7 +49,7 @@ func Pull(schema config.Config, trans transport.Transport, args []string) {
     responseChan := make(chan operationResponse, len(paths))
 
     for _, path := range paths {
-        remoteFile := transport.NewRemotableFile(schema[path].Commit, path)
+        remoteFile := transport.NewRemotableFile(schema.Files[path], path)
         go download(trans, remoteFile, responseChan)
     }
 

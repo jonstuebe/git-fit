@@ -25,18 +25,23 @@ func upload(trans transport.Transport, file transport.RemotableFile, responseCha
     }
 }
 
-func Push(schema config.Config, trans transport.Transport, args []string) {
+func Push(schema *config.Config, trans transport.Transport, args []string) {
     paths := args
 
     if len(paths) == 0 {
         paths = make([]string, 0)
 
-        for path := range schema {
+        for path := range schema.Files {
             paths = append(paths, path)
         }
     }
 
     latestCommit := util.LatestCommit()
+
+    if latestCommit == "HEAD" {
+        panic("There are no commits in this repo - make a commit first before using git-fit")
+    }
+
     responseChan := make(chan operationResponse, len(args))
 
     for _, path := range args {
@@ -54,9 +59,7 @@ func Push(schema config.Config, trans transport.Transport, args []string) {
         } else {
             util.Message("%s: Uploaded\n", res.file.Path)
 
-            schema[res.file.Path] = config.ConfigEntry {
-                Commit: res.file.CommitHash,
-            }
+            schema.Files[res.file.Path] = res.file.CommitHash
         }
     }
 }

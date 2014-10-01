@@ -20,14 +20,14 @@ func help(code int) {
 
     push [file 1] ... [file n]
         Pushes the specified files. If no arguments are given, all of the
-        files in .git-fit.json are pushed.
+        files in git-fit.json are pushed.
 
     pull [file 1] ... [file n]
         Pulls the specified files. If no arguments are given, all of the files
-        in .git-fit.json are pulled.
+        in git-fit.json are pulled.
 
     rm [file 1] ... [file n]
-        Removes the specified files from .git-fit.json and consequently from
+        Removes the specified files from git-fit.json and consequently from
         git-fit source control.
 
 `)

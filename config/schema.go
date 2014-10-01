@@ -11,17 +11,16 @@ import (
     "regexp"
 )
 
-type Config map[string]ConfigEntry
-
-type ConfigEntry struct {
-    Commit string `json:"commit"`
+type Config struct {
+    Version int `json:"version"`
+    Files map[string]string `json:"files"`
 }
 
-const FILE_PATH = ".git-fit.json"
+const FILE_PATH = "git-fit.json"
 
 var NEWLINE_CHECKING_PATTERN = regexp.MustCompile("\n$")
 
-func SaveConfig(config Config) error {
+func SaveConfig(config *Config) error {
     bytes, err := json.MarshalIndent(config, "", "    ")
 
     if err != nil {
@@ -35,7 +34,7 @@ func SaveConfig(config Config) error {
     return ensureIgnoreEntries(config)
 }
 
-func LoadConfig() (Config, error) {
+func LoadConfig() (*Config, error) {
     if util.FileExists(FILE_PATH) {
         file, err := ioutil.ReadFile(FILE_PATH)
 
@@ -43,42 +42,49 @@ func LoadConfig() (Config, error) {
             return nil, err
         }
 
-        config := make(Config)
+        var config Config
         json.Unmarshal(file, &config)
 
-        if err = validateConfig(config); err != nil {
+        if err = validateConfig(&config); err != nil {
             return nil, err
-        } else if err = ensureIgnoreEntries(config); err != nil {
+        } else if err = ensureIgnoreEntries(&config); err != nil {
             return nil, err
         }
 
-        return config, nil
+        return &config, nil
     } else {
-        config := make(Config)
+        config := Config {
+            Version: 1,
+            Files: make(map[string]string, 0),
+        }
 
-        if err := SaveConfig(config); err != nil {
+        if err := SaveConfig(&config); err != nil {
             return nil, err
         }
 
-        return config, nil
+        return &config, nil
     }
 }
 
-func validateConfig(config Config) error {
-    for path, value := range config {
-        if len(value.Commit) != 40 {
-            return errors.New(fmt.Sprintf("Invalid SHA hash for config entry %s: %s", path, value.Commit))
+func validateConfig(config *Config) error {
+    if config.Version != 1 {
+        return errors.New(fmt.Sprintf("Invalid config version - expected 1, got %d", config.Version))
+    }
+
+    for path, value := range config.Files {
+        if len(value) != 40 {
+            return errors.New(fmt.Sprintf("Invalid SHA hash for file %s: %s", path, value))
         }
     }
 
     return nil
 }
 
-func ensureIgnoreEntries(config Config) error {
+func ensureIgnoreEntries(config *Config) error {
     candidateEntries := make(map[string]bool)
     endsWithNewLine := true
 
-    for path := range config {
+    for path := range config.Files {
         candidateEntries[fmt.Sprintf("/%s", path)] = true
     }
 
