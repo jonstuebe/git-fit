@@ -1,27 +1,23 @@
 package cli
 
-import (
-    "github.com/dailymuse/git-fit/transport"
-)
-
 type operationResponse struct {
-    file transport.RemotableFile
-    synced bool
+    path string
+    response interface{}
     err error
 }
 
-func newOperationResponse(file transport.RemotableFile, synced bool) operationResponse {
+func newOperationResponse(path string, response interface{}) operationResponse {
     return operationResponse {
-        file: file,
-        synced: synced,
+        path: path,
+        response: response,
         err: nil,
     }
 }
 
-func newErrorOperationResponse(file transport.RemotableFile, err error) operationResponse {
+func newErrorOperationResponse(path string, err error) operationResponse {
     return operationResponse {
-        file: file,
-        synced: false,
+        path: path,
+        response: nil,
         err: err,
     }
 }

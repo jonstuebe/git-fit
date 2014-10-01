@@ -1,6 +1,7 @@
 package transport
 
 import (
+    "os"
     "github.com/mitchellh/goamz/s3"
 )
 
@@ -16,19 +17,19 @@ func NewS3Transport(bucket *s3.Bucket) S3Transport {
     }
 }
 
-func (self S3Transport) Download(file RemotableFile) error {
-    reader, err := self.bucket.GetReader(file.CommittedHash)
+func (self S3Transport) Download(blob Blob) error {
+    reader, err := self.bucket.GetReader(blob.Hash)
 
     if err != nil {
         return err
     }
 
     defer reader.Close()
-    return file.WriteFile(reader)
+    return blob.Write(reader)
 }
 
-func (self S3Transport) Upload(file RemotableFile) error {
-    contents, err := file.GetFile()
+func (self S3Transport) Upload(blob Blob) error {
+    contents, err := os.Open(blob.Path())
 
     if err != nil {
         return err
@@ -36,7 +37,7 @@ func (self S3Transport) Upload(file RemotableFile) error {
 
     defer contents.Close()
 
-    multi, err := self.bucket.InitMulti(file.CommittedHash, "application/octet-stream", s3.Private)
+    multi, err := self.bucket.InitMulti(blob.Hash, "application/octet-stream", s3.Private)
 
     if err != nil {
         return err
@@ -52,8 +53,8 @@ func (self S3Transport) Upload(file RemotableFile) error {
     return multi.Complete(parts)
 }
 
-func (self S3Transport) Exists(file RemotableFile) (bool, error) {
-    _, err := self.bucket.GetKey(file.CommittedHash)
+func (self S3Transport) Exists(blob Blob) (bool, error) {
+    _, err := self.bucket.GetKey(blob.Hash)
 
     // TODO: should be a better way of checking this
     if err != nil && err.Error() == "404 Not Found" {

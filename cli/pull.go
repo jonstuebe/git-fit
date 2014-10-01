@@ -6,19 +6,23 @@ import (
     "github.com/dailymuse/git-fit/util"
 )
 
-func download(trans transport.Transport, file transport.RemotableFile, responseChan chan operationResponse) {
-    actualHash, err := file.CalculateHash()
+func download(trans transport.Transport, path string, committedHash string, responseChan chan operationResponse) {
+    blob := transport.NewBlob(committedHash)
+    synced := false
 
-    if err != nil {
-        responseChan <- newErrorOperationResponse(file, err)
-    } else if actualHash == file.CommittedHash {
-        responseChan <- newOperationResponse(file, false)
-    } else {
-        if err = trans.Download(file); err != nil {
-            responseChan <- newErrorOperationResponse(file, err)
-        } else {
-            responseChan <- newOperationResponse(file, true)
+    if !util.IsFile(blob.Path()) {
+        if err := trans.Download(blob); err != nil {
+            responseChan <- newErrorOperationResponse(path, err)
+            return
         }
+
+        synced = true
+    }
+
+    if err := util.CopyFile(blob.Path(), path); err != nil {
+        responseChan <- newErrorOperationResponse(path, err)   
+    } else {
+        responseChan <- newOperationResponse(path, synced)
     }
 }
 
@@ -30,7 +34,7 @@ func Pull(schema *config.Config, trans transport.Transport, args []string) {
 
         for path := range schema.Files {
             if util.FileExists(path) {
-                util.Error("%s: Not overwriting because the file already exists. If you wish to overwrite the current contents, explicitly include the file path as an argument\n", path)
+                util.Error("%s: Not overwriting because the file already exists. If you wish to overwrite the current contents, explicitly include the file path as an argument.\n", path)
             } else {
                 paths = append(paths, path)
             }
@@ -46,19 +50,22 @@ func Pull(schema *config.Config, trans transport.Transport, args []string) {
     responseChan := make(chan operationResponse, len(paths))
 
     for _, path := range paths {
-        remoteFile := transport.NewRemotableFile(path, schema.Files[path])
-        go download(trans, remoteFile, responseChan)
+        go download(trans, path, schema.Files[path], responseChan)
     }
 
     for i := 0; i < len(paths); i++ {
         res := <- responseChan
 
         if res.err != nil {
-            util.Error("%s: Could not download: %s\n", res.file.Path, res.err.Error())
-        } else if !res.synced {
-            util.Error("%s: Already synced\n", res.file.Path)
+            util.Error("%s: Could not download: %s\n", res.path, res.err.Error())
         } else {
-            util.Message("%s: Downloaded\n", res.file.Path)
+            synced := res.response.(bool)
+
+            if !synced {
+                util.Error("%s: Already synced\n", res.path)
+            } else {
+                util.Message("%s: Downloaded\n", res.path)
+            }
         }
     }
 }

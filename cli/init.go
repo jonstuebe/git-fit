@@ -1,6 +1,7 @@
 package cli
 
 import (
+    "os"
     "fmt"
     "github.com/dailymuse/git-fit/util"
 )
@@ -32,4 +33,10 @@ func Init() {
     util.SetGitConfig("git-fit.aws.access-key", awsAccessKey)
     util.SetGitConfig("git-fit.aws.secret-key", awsSecretKey)
     util.SetGitConfig("git-fit.aws.bucket", awsBucket)
+
+    err := os.MkdirAll(".git/fit", os.ModePerm)
+
+    if err != nil {
+        util.Fatal("Could not create the asset staging directory (.git/fit): %s\n", err.Error())
+    }
 }

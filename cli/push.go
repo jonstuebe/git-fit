@@ -4,25 +4,36 @@ import (
     "github.com/dailymuse/git-fit/transport"
     "github.com/dailymuse/git-fit/config"
     "github.com/dailymuse/git-fit/util"
+    "errors"
 )
 
-func upload(trans transport.Transport, file transport.RemotableFile, responseChan chan operationResponse) {
-    actualHash, err := file.CalculateHash()
+func upload(trans transport.Transport, path string, responseChan chan operationResponse) {
+    hash, err := util.FileHash(path)
 
     if err != nil {
-        responseChan <- newErrorOperationResponse(file, err)
+        responseChan <- newErrorOperationResponse(path, err)
+    } else if hash == "" {
+        responseChan <- newErrorOperationResponse(path, errors.New("File does not exist"))
     } else {
-        actualFile := transport.NewRemotableFile(file.Path, actualHash)
-        exists, err := trans.Exists(actualFile)
+        blob := transport.NewBlob(hash)
+
+        if !util.IsFile(blob.Path()) {
+            if err = util.CopyFile(path, blob.Path()); err != nil {
+                responseChan <- newErrorOperationResponse(path, err)
+                return
+            }
+        }
+
+        exists, err := trans.Exists(blob)
 
         if err != nil {
-            responseChan <- newErrorOperationResponse(actualFile, err)
+            responseChan <- newErrorOperationResponse(path, err)
         } else if exists {
-            responseChan <- newOperationResponse(actualFile, false)
-        } else if err = trans.Upload(actualFile); err != nil {
-            responseChan <- newErrorOperationResponse(actualFile, err)
+            responseChan <- newOperationResponse(path, "")
+        } else if err = trans.Upload(blob); err != nil {
+            responseChan <- newErrorOperationResponse(path, err)
         } else {
-            responseChan <- newOperationResponse(actualFile, true)
+            responseChan <- newOperationResponse(path, hash)
         }
     }
 }
@@ -41,20 +52,23 @@ func Push(schema *config.Config, trans transport.Transport, args []string) {
     responseChan := make(chan operationResponse, len(paths))
 
     for _, path := range paths {
-        remoteFile := transport.NewRemotableFile(path, schema.Files[path])
-        go upload(trans, remoteFile, responseChan)
+        go upload(trans, path, responseChan)
     }
 
     for i := 0; i < len(paths); i++ {
         res := <- responseChan
 
         if res.err != nil {
-            util.Error("%s: Could not upload: %s\n", res.file.Path, res.err.Error())
-        } else if !res.synced {
-            util.Error("%s: Already synced\n", res.file.Path)
+            util.Error("%s: Could not upload: %s\n", res.path, res.err.Error())
         } else {
-            util.Message("%s: Uploaded\n", res.file.Path)
-            schema.Files[res.file.Path] = res.file.CommittedHash
+            hash := res.response.(string)
+
+            if hash == "" {
+                util.Error("%s: Already synced\n", res.path)
+            } else {
+                util.Message("%s: Uploaded\n", res.path)
+                schema.Files[res.path] = hash
+            }
         }
     }
 }
