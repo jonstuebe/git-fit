@@ -17,7 +17,7 @@ func NewS3Transport(bucket *s3.Bucket) S3Transport {
 }
 
 func (self S3Transport) Download(file RemotableFile) error {
-    reader, err := self.bucket.GetReader(file.StandardName())
+    reader, err := self.bucket.GetReader(file.CommittedHash)
 
     if err != nil {
         return err
@@ -36,7 +36,7 @@ func (self S3Transport) Upload(file RemotableFile) error {
 
     defer contents.Close()
 
-    multi, err := self.bucket.InitMulti(file.StandardName(), "application/octet-stream", s3.Private)
+    multi, err := self.bucket.InitMulti(file.CommittedHash, "application/octet-stream", s3.Private)
 
     if err != nil {
         return err
@@ -53,7 +53,7 @@ func (self S3Transport) Upload(file RemotableFile) error {
 }
 
 func (self S3Transport) Exists(file RemotableFile) (bool, error) {
-    _, err := self.bucket.GetKey(file.StandardName())
+    _, err := self.bucket.GetKey(file.CommittedHash)
 
     // TODO: should be a better way of checking this
     if err != nil && err.Error() == "404 Not Found" {

@@ -3,7 +3,6 @@ package transport
 import (
     "io"
     "os"
-    "fmt"
     "crypto/sha1"
     "encoding/hex"
     "github.com/dailymuse/git-fit/util"
@@ -19,10 +18,6 @@ func NewRemotableFile(path string, committedHash string) RemotableFile {
         Path: path,
         CommittedHash: committedHash,
     }
-}
-
-func (self RemotableFile) StandardName() string {
-    return fmt.Sprintf("%s_%s", self.Path, self.CommittedHash)
 }
 
 func (self RemotableFile) GetFile() (*os.File, error) {
