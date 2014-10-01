@@ -3,8 +3,8 @@
 ## About ##
 
 `git-fit` is a tool for efficiently managing your large repo assets outside of
-git. Assets are stored in S3, and tied to commits so you can have different
-versions of an asset across different commits.
+git. Assets are stored in S3. Metadata is stored directly in git, so you can
+have different versions of an asset across different commits.
 
 ## How It Works ##
 
