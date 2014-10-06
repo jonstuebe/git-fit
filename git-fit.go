@@ -13,7 +13,7 @@ import (
 )
 
 func help(code int) {
-    fmt.Printf(`usage: git-fit push|pull|rm
+    fmt.Printf(`usage: git-fit push|pull|rm|gc
 
     init
         Initializes git-fit for a repo by adding the necessary configs.
