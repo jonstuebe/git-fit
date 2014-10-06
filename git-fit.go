@@ -30,6 +30,11 @@ func help(code int) {
         Removes the specified files from git-fit.json and consequently from
         git-fit source control.
 
+    gc
+        Removes cached assets that aren't being used by the current commit.
+        This will save space, but may slow down future pulls while the cache
+        is warming back up.
+
 `)
 
     os.Exit(code)
@@ -87,6 +92,8 @@ func main() {
             cli.Remove(schema, trans, os.Args[2:])
         case "pull":
             cli.Pull(schema, trans, os.Args[2:])
+        case "gc":
+            cli.Gc(schema, trans, os.Args[2:])
         default:
             util.Error("Unknown command")
             help(-1)
