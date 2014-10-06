@@ -12,7 +12,7 @@ import (
 func Gc(schema *config.Config, trans transport.Transport, args []string) {
     savedFiles := make(map[string]bool, len(schema.Files) * 2)
 
-    for hash := range schema.Files {
+    for _, hash := range schema.Files {
         savedFiles[hash] = true
     }
 
