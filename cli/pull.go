@@ -8,21 +8,17 @@ import (
 
 func download(trans transport.Transport, path string, committedHash string, responseChan chan operationResponse) {
     blob := transport.NewBlob(committedHash)
-    synced := false
 
     if !util.IsFile(blob.Path()) {
-        if err := trans.Download(blob); err != nil {
-            responseChan <- newErrorOperationResponse(path, err)
+        err := pipeResponses(path, false, trans.Download(blob), responseChan); if err != transport.ErrProgressCompleted {
             return
         }
-
-        synced = true
     }
 
     if err := util.CopyFile(blob.Path(), path); err != nil {
         responseChan <- newErrorOperationResponse(path, err)   
     } else {
-        responseChan <- newOperationResponse(path, synced)
+        responseChan <- newOperationResponse(path, transport.NewFinishedProgressMessage())
     }
 }
 
@@ -34,7 +30,7 @@ func Pull(schema *config.Config, trans transport.Transport, args []string) {
 
         for path := range schema.Files {
             if util.FileExists(path) {
-                util.Error("%s: Not overwriting because the file already exists. If you wish to overwrite the current contents, explicitly include the file path as an argument.\n", path)
+                util.Error("%s: Skipped\n", path)
             } else {
                 paths = append(paths, path)
             }
@@ -53,19 +49,5 @@ func Pull(schema *config.Config, trans transport.Transport, args []string) {
         go download(trans, path, schema.Files[path], responseChan)
     }
 
-    for i := 0; i < len(paths); i++ {
-        res := <- responseChan
-
-        if res.err != nil {
-            util.Error("%s: Could not download: %s\n", res.path, res.err.Error())
-        } else {
-            synced := res.response.(bool)
-
-            if !synced {
-                util.Error("%s: Already synced\n", res.path)
-            } else {
-                util.Message("%s: Downloaded\n", res.path)
-            }
-        }
-    }
+    handleResponse(responseChan, len(paths))
 }

@@ -29,11 +29,9 @@ func upload(trans transport.Transport, path string, responseChan chan operationR
         if err != nil {
             responseChan <- newErrorOperationResponse(path, err)
         } else if exists {
-            responseChan <- newOperationResponse(path, "")
-        } else if err = trans.Upload(blob); err != nil {
-            responseChan <- newErrorOperationResponse(path, err)
+            responseChan <- newOperationResponse(path, transport.NewFinishedProgressMessage())
         } else {
-            responseChan <- newOperationResponse(path, hash)
+            pipeResponses(path, true, trans.Upload(blob), responseChan)
         }
     }
 }
@@ -55,20 +53,5 @@ func Push(schema *config.Config, trans transport.Transport, args []string) {
         go upload(trans, path, responseChan)
     }
 
-    for i := 0; i < len(paths); i++ {
-        res := <- responseChan
-
-        if res.err != nil {
-            util.Error("%s: Could not upload: %s\n", res.path, res.err.Error())
-        } else {
-            hash := res.response.(string)
-
-            if hash == "" {
-                util.Error("%s: Already synced\n", res.path)
-            } else {
-                util.Message("%s: Uploaded\n", res.path)
-                schema.Files[res.path] = hash
-            }
-        }
-    }
+    handleResponse(responseChan, len(paths))
 }
