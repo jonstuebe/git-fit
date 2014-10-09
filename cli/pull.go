@@ -8,17 +8,30 @@ import (
 
 func download(trans transport.Transport, path string, committedHash string, responseChan chan operationResponse) {
     blob := transport.NewBlob(committedHash)
+    downloaded := false
+    var progress transport.ProgressMessage
 
     if !util.IsFile(blob.Path()) {
-        err := pipeResponses(path, false, trans.Download(blob), responseChan); if err != transport.ErrProgressCompleted {
+        if progress = pipeResponses(path, false, trans.Download(blob), responseChan); progress.IsErrored() {
+            responseChan <- newOperationResponse(path, progress)
             return
         }
+
+        downloaded = true
     }
 
     if err := util.CopyFile(blob.Path(), path); err != nil {
-        responseChan <- newErrorOperationResponse(path, err)   
+        if downloaded {
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(progress.Total, progress.Total, err))
+        } else {
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
+        }
     } else {
-        responseChan <- newOperationResponse(path, transport.NewFinishedProgressMessage())
+        if downloaded {
+            responseChan <- newOperationResponse(path, progress)
+        } else {
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, transport.ErrProgressCompleted))
+        }
     }
 }
 

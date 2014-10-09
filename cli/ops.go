@@ -20,24 +20,16 @@ func newOperationResponse(path string, progress transport.ProgressMessage) opera
     }
 }
 
-func newErrorOperationResponse(path string, err error) operationResponse {
-    return operationResponse {
-        ProgressMessage: transport.NewErrorProgressMessage(err),
-        Path: path,
-    }
-}
-
-func pipeResponses(path string, sendFinal bool, fromChan chan transport.ProgressMessage, toChan chan operationResponse) error {
+func pipeResponses(path string, sendFinal bool, fromChan chan transport.ProgressMessage, toChan chan operationResponse) transport.ProgressMessage {
     for {
         progress := <- fromChan
-        isFinal := progress.Err == transport.ErrProgressCompleted
 
-        if !isFinal || (isFinal && sendFinal) {
+        if !progress.IsCompleted() || (progress.IsCompleted() && sendFinal) {
             toChan <- newOperationResponse(path, progress)
         }
 
         if progress.Err != nil {
-            return progress.Err
+            return progress
         }
     }
 }
@@ -48,38 +40,50 @@ func handleResponse(ch chan operationResponse, fileCount int) {
     }
 
     statuses := make(map[string]operationResponse)
-    bar := pb.StartNew(fileCount * 100)
+    var total int
+    var bar *pb.ProgressBar
 
-    //TODO: use floats for progress?
     for {
         res := <- ch
         statuses[res.Path] = res
-        progress := 0
-        doneCount := 0
 
-        for _, status := range statuses {
-            if status.Err != nil {
-                progress += 100
-                doneCount++
-            } else {
-                progress += int(status.Percent * 100)
+        if bar == nil && len(statuses) == fileCount {
+            for _, status := range statuses {
+                total += status.Total
             }
+
+            bar = pb.New(total)
+            bar.SetUnits(pb.U_BYTES)
+            bar.Start()
         }
 
-        bar.Set(progress)
-
-        if doneCount == fileCount {
-            bar.Finish()
+        if bar != nil {
+            var progress int
+            doneCount := 0
 
             for _, status := range statuses {
-                if status.Err != transport.ErrProgressCompleted {
-                    util.Error(fmt.Sprintf("%s: %s\n", status.Path, status.Err))
-                } else {
-                    util.Message(fmt.Sprintf("%s: Synced\n", status.Path))
+                progress += status.Progress
+
+                if status.IsCompleted() || status.IsErrored() {
+                    doneCount++
                 }
             }
 
-            return
+            bar.Set(progress)
+
+            if doneCount == fileCount {
+                bar.Finish()
+
+                for _, status := range statuses {
+                    if status.IsErrored() {
+                        util.Error(fmt.Sprintf("%s: %s\n", status.Path, status.Err))
+                    } else {
+                        util.Message(fmt.Sprintf("%s: Synced\n", status.Path))
+                    }
+                }
+
+                return
+            }
         }
     }
 }

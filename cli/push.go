@@ -11,15 +11,15 @@ func upload(trans transport.Transport, path string, responseChan chan operationR
     hash, err := util.FileHash(path)
 
     if err != nil {
-        responseChan <- newErrorOperationResponse(path, err)
+        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
     } else if hash == "" {
-        responseChan <- newErrorOperationResponse(path, errors.New("File does not exist"))
+        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, errors.New("File does not exist")))
     } else {
         blob := transport.NewBlob(hash)
 
         if !util.IsFile(blob.Path()) {
             if err = util.CopyFile(path, blob.Path()); err != nil {
-                responseChan <- newErrorOperationResponse(path, err)
+                responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
                 return
             }
         }
@@ -27,9 +27,9 @@ func upload(trans transport.Transport, path string, responseChan chan operationR
         exists, err := trans.Exists(blob)
 
         if err != nil {
-            responseChan <- newErrorOperationResponse(path, err)
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
         } else if exists {
-            responseChan <- newOperationResponse(path, transport.NewFinishedProgressMessage())
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, transport.ErrProgressCompleted))
         } else {
             pipeResponses(path, true, trans.Upload(blob), responseChan)
         }

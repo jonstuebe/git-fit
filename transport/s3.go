@@ -19,18 +19,22 @@ func NewS3Transport(bucket *s3.Bucket) S3Transport {
     }
 }
 
-func (self S3Transport) downloadChunks(progress chan ProgressMessage, totalSize int64, file *os.File, reader io.ReadCloser) {
+func (self S3Transport) downloadChunks(progress chan ProgressMessage, totalSize uint64, file *os.File, reader io.ReadCloser) {
     defer file.Close()
     defer reader.Close()
 
-    progressWriter := NewProgressWriter(progress, uint64(totalSize))
+    totalSizeMb := int(totalSize / 1024 / 1024)
+
+    progress <- NewProgressMessage(0, totalSizeMb, nil)
+
+    progressWriter := NewProgressWriter(progress, totalSize)
     writer := io.MultiWriter(progressWriter, file)
     _, err := io.Copy(writer, reader)
 
     if err != nil {
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(totalSizeMb, totalSizeMb, err)
     } else {
-        progress <- NewFinishedProgressMessage()
+        progress <- NewProgressMessage(totalSizeMb, totalSizeMb, ErrProgressCompleted)
     }
 }
 
@@ -39,14 +43,14 @@ func (self S3Transport) Download(blob Blob) (chan ProgressMessage) {
     key, err := self.bucket.GetKey(blob.Hash)
 
     if err != nil {
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(0, 0, err)
         return progress
     }
 
     file, err := os.Create(blob.Path())
 
     if err != nil {
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(0, 0, err)
         return progress
     }
 
@@ -54,28 +58,29 @@ func (self S3Transport) Download(blob Blob) (chan ProgressMessage) {
 
     if err != nil {
         file.Close()
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(0, 0, err)
         return progress
     }
 
-    go self.downloadChunks(progress, key.Size, file, reader)
+    go self.downloadChunks(progress, uint64(key.Size), file, reader)
     return progress
 }
 
-func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os.File, info os.FileInfo, multi *s3.Multi) {
+func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os.File, totalSize uint64, multi *s3.Multi) {
     defer contents.Close()
 
+    totalSizeMb := int(totalSize / 1024 / 1024)
     chunk := make([]byte, MULTIPART_CHUNK_SIZE)
-    totalChunks := info.Size() / MULTIPART_CHUNK_SIZE
+    totalChunks := totalSize / MULTIPART_CHUNK_SIZE
     chunkNum := 0
     parts := make([]s3.Part, totalChunks)
-    progress <- NewProgressMessage(0.0)
+    progress <- NewProgressMessage(0, totalSizeMb, nil)
 
     for {
         n, bufferErr := io.ReadFull(contents, chunk)
 
         if bufferErr != nil && bufferErr != io.ErrUnexpectedEOF {
-            progress <- NewErrorProgressMessage(bufferErr)
+            progress <- NewProgressMessage(totalSizeMb, totalSizeMb, bufferErr)
             multi.Abort()
             return
         }
@@ -85,14 +90,14 @@ func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os
             part, err := multi.PutPart(chunkNum, reader)
 
             if err != nil {
-                progress <- NewErrorProgressMessage(err)
+                progress <- NewProgressMessage(totalSizeMb, totalSizeMb, err)
                 multi.Abort()
                 return
             }
 
             parts[chunkNum] = part
             chunkNum++
-            progress <- NewProgressMessage(float64(chunkNum) / float64(totalChunks))
+            progress <- NewProgressMessage(chunkNum * (MULTIPART_CHUNK_SIZE / 1024 / 1024), totalSizeMb, nil)
         }
 
         if bufferErr == io.ErrUnexpectedEOF {
@@ -101,9 +106,9 @@ func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os
     }
 
     if err := multi.Complete(parts); err != nil {
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(totalSizeMb, totalSizeMb, err)
     } else {
-        progress <- NewFinishedProgressMessage()
+        progress <- NewProgressMessage(totalSizeMb, totalSizeMb, ErrProgressCompleted)
     }
 }
 
@@ -112,7 +117,7 @@ func (self S3Transport) Upload(blob Blob) (chan ProgressMessage) {
     contents, err := os.Open(blob.Path())
 
     if err != nil {
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(0, 0, err)
         return progress
     }
 
@@ -120,7 +125,7 @@ func (self S3Transport) Upload(blob Blob) (chan ProgressMessage) {
 
     if err != nil {
         contents.Close()
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(0, 0, err)
         return progress
     }
 
@@ -128,11 +133,11 @@ func (self S3Transport) Upload(blob Blob) (chan ProgressMessage) {
 
     if err != nil {
         contents.Close()
-        progress <- NewErrorProgressMessage(err)
+        progress <- NewProgressMessage(0, 0, err)
         return progress
     }
 
-    go self.uploadChunks(progress, contents, info, multi)
+    go self.uploadChunks(progress, contents, uint64(info.Size()), multi)
     return progress
 }
 
