@@ -52,9 +52,7 @@ func handleResponse(ch chan operationResponse, fileCount int) {
                 total += status.Total
             }
 
-            bar = pb.New(total)
-            bar.SetUnits(pb.U_BYTES)
-            bar.Start()
+            bar = pb.StartNew(total)
         }
 
         if bar != nil {
