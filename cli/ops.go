@@ -40,37 +40,38 @@ func handleResponse(ch chan operationResponse, fileCount int) {
     }
 
     statuses := make(map[string]operationResponse)
-    var total int
     var bar *pb.ProgressBar
 
     for {
         res := <- ch
         statuses[res.Path] = res
 
-        if bar == nil && len(statuses) == fileCount {
-            for _, status := range statuses {
-                total += status.Total
-            }
-
-            bar = pb.StartNew(total)
-        }
-
-        if bar != nil {
-            var progress int
+        if len(statuses) == fileCount {
+            total := 0
+            progress := 0
             doneCount := 0
 
             for _, status := range statuses {
                 progress += status.Progress
+                total += status.Total
 
-                if status.IsCompleted() || status.IsErrored() {
+                if status.Err != nil {
                     doneCount++
                 }
             }
 
-            bar.Set(progress)
+            if bar == nil && progress > 0 {
+                bar = pb.StartNew(total)
+            }
+
+            if bar != nil {
+                bar.Set(progress)
+            }
 
             if doneCount == fileCount {
-                bar.Finish()
+                if bar != nil {
+                    bar.Finish()
+                }
 
                 for _, status := range statuses {
                     if status.IsErrored() {

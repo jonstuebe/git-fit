@@ -4,9 +4,15 @@ import (
     "github.com/dailymuse/git-fit/transport"
     "github.com/dailymuse/git-fit/config"
     "github.com/dailymuse/git-fit/util"
+    "errors"
 )
 
 func download(trans transport.Transport, path string, committedHash string, responseChan chan operationResponse) {
+    if util.FileExists(path) {
+        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, errors.New("Skipped")))
+        return
+    }
+
     blob := transport.NewBlob(committedHash)
     downloaded := false
     var progress transport.ProgressMessage
@@ -42,11 +48,7 @@ func Pull(schema *config.Config, trans transport.Transport, args []string) {
         paths = make([]string, 0)
 
         for path := range schema.Files {
-            if util.FileExists(path) {
-                util.Error("%s: Skipped\n", path)
-            } else {
-                paths = append(paths, path)
-            }
+            paths = append(paths, path)
         }
     } else {
         for _, path := range paths {
