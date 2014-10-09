@@ -71,9 +71,8 @@ func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os
 
     totalSizeMb := int(totalSize / 1024 / 1024)
     chunk := make([]byte, MULTIPART_CHUNK_SIZE)
-    totalChunks := totalSize / MULTIPART_CHUNK_SIZE
     chunkNum := 0
-    parts := make([]s3.Part, totalChunks)
+    parts := make([]s3.Part, 0)
     progress <- NewProgressMessage(0, totalSizeMb, nil)
 
     for {
@@ -87,7 +86,7 @@ func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os
 
         if n > 0 {
             reader := bytes.NewReader(chunk[:n])
-            part, err := multi.PutPart(chunkNum, reader)
+            part, err := multi.PutPart(chunkNum + 1, reader)
 
             if err != nil {
                 progress <- NewProgressMessage(totalSizeMb, totalSizeMb, err)
@@ -95,7 +94,7 @@ func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os
                 return
             }
 
-            parts[chunkNum] = part
+            parts = append(parts, part)
             chunkNum++
             progress <- NewProgressMessage(chunkNum * (MULTIPART_CHUNK_SIZE / 1024 / 1024), totalSizeMb, nil)
         }
