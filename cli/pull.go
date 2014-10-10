@@ -9,7 +9,7 @@ import (
 
 func download(trans transport.Transport, path string, committedHash string, responseChan chan operationResponse) {
     if util.FileExists(path) {
-        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, errors.New("Skipped")))
+        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, errors.New("Skipped")), nil)
         return
     }
 
@@ -18,8 +18,8 @@ func download(trans transport.Transport, path string, committedHash string, resp
     var progress transport.ProgressMessage
 
     if !util.IsFile(blob.Path()) {
-        if progress = pipeResponses(path, false, trans.Download(blob), responseChan); progress.IsErrored() {
-            responseChan <- newOperationResponse(path, progress)
+        if progress = pipeProgress(path, trans.Download(blob), responseChan); progress.IsErrored() {
+            responseChan <- newOperationResponse(path, progress, nil)
             return
         }
 
@@ -28,15 +28,15 @@ func download(trans transport.Transport, path string, committedHash string, resp
 
     if err := util.CopyFile(blob.Path(), path); err != nil {
         if downloaded {
-            responseChan <- newOperationResponse(path, transport.NewProgressMessage(progress.Total, progress.Total, err))
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(progress.Total, progress.Total, err), nil)
         } else {
-            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err), nil)
         }
     } else {
         if downloaded {
-            responseChan <- newOperationResponse(path, progress)
+            responseChan <- newOperationResponse(path, progress, nil)
         } else {
-            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, transport.ErrProgressCompleted))
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, transport.ErrProgressCompleted), nil)
         }
     }
 }

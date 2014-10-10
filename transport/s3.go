@@ -78,28 +78,26 @@ func (self S3Transport) uploadChunks(progress chan ProgressMessage, contents *os
     for {
         n, bufferErr := io.ReadFull(contents, chunk)
 
-        if bufferErr != nil && bufferErr != io.ErrUnexpectedEOF {
+        if bufferErr != nil && bufferErr != io.ErrUnexpectedEOF && bufferErr != io.EOF {
             progress <- NewProgressMessage(totalSizeMb, totalSizeMb, bufferErr)
             multi.Abort()
             return
         }
 
-        if n > 0 {
-            reader := bytes.NewReader(chunk[:n])
-            part, err := multi.PutPart(chunkNum + 1, reader)
+        reader := bytes.NewReader(chunk[:n])
+        part, err := multi.PutPart(chunkNum + 1, reader)
 
-            if err != nil {
-                progress <- NewProgressMessage(totalSizeMb, totalSizeMb, err)
-                multi.Abort()
-                return
-            }
-
-            parts = append(parts, part)
-            chunkNum++
-            progress <- NewProgressMessage(chunkNum * (MULTIPART_CHUNK_SIZE / 1024 / 1024), totalSizeMb, nil)
+        if err != nil {
+            progress <- NewProgressMessage(totalSizeMb, totalSizeMb, err)
+            multi.Abort()
+            return
         }
 
-        if bufferErr == io.ErrUnexpectedEOF {
+        parts = append(parts, part)
+        chunkNum++
+        progress <- NewProgressMessage(chunkNum * (MULTIPART_CHUNK_SIZE / 1024 / 1024), totalSizeMb, nil)
+
+        if bufferErr == io.ErrUnexpectedEOF || bufferErr == io.EOF {
             break
         }
     }

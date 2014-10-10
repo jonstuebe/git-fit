@@ -10,22 +10,23 @@ import (
 type operationResponse struct {
     transport.ProgressMessage
     Path string
-    Message string
+    Payload interface{}
 }
 
-func newOperationResponse(path string, progress transport.ProgressMessage) operationResponse {
+func newOperationResponse(path string, progress transport.ProgressMessage, payload interface{}) operationResponse {
     return operationResponse {
         ProgressMessage: progress,
         Path: path,
+        Payload: payload,
     }
 }
 
-func pipeResponses(path string, sendFinal bool, fromChan chan transport.ProgressMessage, toChan chan operationResponse) transport.ProgressMessage {
+func pipeProgress(path string, fromChan chan transport.ProgressMessage, toChan chan operationResponse) transport.ProgressMessage {
     for {
         progress := <- fromChan
 
-        if !progress.IsCompleted() || (progress.IsCompleted() && sendFinal) {
-            toChan <- newOperationResponse(path, progress)
+        if !progress.IsCompleted() {
+            toChan <- newOperationResponse(path, progress, nil)
         }
 
         if progress.Err != nil {
@@ -34,9 +35,9 @@ func pipeResponses(path string, sendFinal bool, fromChan chan transport.Progress
     }
 }
 
-func handleResponse(ch chan operationResponse, fileCount int) {
+func handleResponse(ch chan operationResponse, fileCount int) []operationResponse {
     if fileCount == 0 {
-        return
+        return make([]operationResponse, 0)
     }
 
     statuses := make(map[string]operationResponse)
@@ -73,15 +74,18 @@ func handleResponse(ch chan operationResponse, fileCount int) {
                     bar.Finish()
                 }
 
+                successful := make([]operationResponse, 0)
+
                 for _, status := range statuses {
                     if status.IsErrored() {
                         util.Error(fmt.Sprintf("%s: %s\n", status.Path, status.Err))
                     } else {
                         util.Message(fmt.Sprintf("%s: Synced\n", status.Path))
+                        successful = append(successful, status)
                     }
                 }
 
-                return
+                return successful
             }
         }
     }

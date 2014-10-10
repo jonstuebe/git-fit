@@ -4,22 +4,19 @@ import (
     "github.com/dailymuse/git-fit/transport"
     "github.com/dailymuse/git-fit/config"
     "github.com/dailymuse/git-fit/util"
-    "errors"
 )
 
 func upload(trans transport.Transport, path string, responseChan chan operationResponse) {
     hash, err := util.FileHash(path)
 
     if err != nil {
-        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
-    } else if hash == "" {
-        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, errors.New("File does not exist")))
+        responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err), nil)
     } else {
         blob := transport.NewBlob(hash)
 
         if !util.IsFile(blob.Path()) {
             if err = util.CopyFile(path, blob.Path()); err != nil {
-                responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
+                responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err), nil)
                 return
             }
         }
@@ -27,11 +24,17 @@ func upload(trans transport.Transport, path string, responseChan chan operationR
         exists, err := trans.Exists(blob)
 
         if err != nil {
-            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err))
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, err), nil)
         } else if exists {
-            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, transport.ErrProgressCompleted))
+            responseChan <- newOperationResponse(path, transport.NewProgressMessage(0, 0, transport.ErrProgressCompleted), blob.Hash)
         } else {
-            pipeResponses(path, true, trans.Upload(blob), responseChan)
+            progress := pipeProgress(path, trans.Upload(blob), responseChan)
+
+            if progress.IsErrored() {
+                responseChan <- newOperationResponse(path, progress, nil)
+            } else {
+                responseChan <- newOperationResponse(path, progress, blob.Hash)
+            }
         }
     }
 }
@@ -53,5 +56,11 @@ func Push(schema *config.Config, trans transport.Transport, args []string) {
         go upload(trans, path, responseChan)
     }
 
-    handleResponse(responseChan, len(paths))
+    successful := handleResponse(responseChan, len(paths))
+
+    for _, status := range successful {
+        if status.Payload != nil {
+            schema.Files[status.Path] = status.Payload.(string)
+        }
+    }
 }
