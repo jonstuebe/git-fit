@@ -38,7 +38,7 @@ func TestFileHash(t *testing.T) {
         t.Error(err)
     }
 
-    if hash != "13467d9c2907df9a8fa18b25ff573cb844f03bd2" {
+    if hash != "507f2b718e0081baaccfe096f336ac2aaf826873" {
         t.Error()
     }
 

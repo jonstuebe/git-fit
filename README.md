@@ -62,9 +62,10 @@ Pulling will look at `git-fit.json` to see what versions of assets to pull.
 If there's a cached copy, its contents will simply be copied to the asset's
 location. If not, a copy will be fetched from S3 and cached.
 
-Note that pull will not overwrite existing files unless the path is explicitly
-passed as an argument. This is to prevent you from accidentally overwriting
-local changes that are unsynced.
+You can do a partial pull by explicitly passing arguments; otherwise all
+managed assets will be pulled. Pull will not overwrite existing files - this
+is to prevent you from accidentally overwriting local changes that are
+unsynced. To overwrite, remove the local copy first.
 
 ### Pushing ###
 

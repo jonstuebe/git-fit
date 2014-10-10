@@ -8,3 +8,9 @@ install: build
 
 deps:
 	go get -u github.com/mitchellh/goamz
+
+unittests:
+	go test github.com/dailymuse/git-fit/transport github.com/dailymuse/git-fit/util
+
+integrationtests: install
+	./integration.py; rm -rf integration
