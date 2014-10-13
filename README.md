@@ -46,7 +46,7 @@ asset management in git.
 ## Installation ##
 
     go get github.com/dailymuse/git-fit
-    pushd $GOROOT/src/github.com/dailymuse/git-fit
+    pushd $GOPATH/src/github.com/dailymuse/git-fit
     make install
     popd
 
