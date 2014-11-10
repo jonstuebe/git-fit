@@ -8,13 +8,16 @@ have different versions of an asset across different commits.
 
 ## Installation ##
 
+```bash
     go get github.com/dailymuse/git-fit
     pushd $GOPATH/src/github.com/dailymuse/git-fit
     make install
     popd
+```
 
 ## Example Usage ##
 
+```bash
     # Initialize the repo - run this the first time you use git-fit on a repo,
     # or when you need to reconfigure your S3 credentials/bucket.
     git fit init
@@ -32,6 +35,7 @@ have different versions of an asset across different commits.
 
     # This will pull any updated files, including bigfile.blob
     git fit pull
+```
 
 ## How It Works ##
 
