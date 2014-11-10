@@ -6,6 +6,33 @@
 git. Assets are stored in S3. Metadata is stored directly in git, so you can
 have different versions of an asset across different commits.
 
+## Installation ##
+
+    go get github.com/dailymuse/git-fit
+    pushd $GOPATH/src/github.com/dailymuse/git-fit
+    make install
+    popd
+
+## Example Usage ##
+
+    # Initialize the repo - run this the first time you use git-fit on a repo,
+    # or when you need to reconfigure your S3 credentials/bucket.
+    git fit init
+
+    # This will add bigfile.blob to git-fit and push the file to S3
+    git fit push bigfile.blob
+
+    # ... make some changes to bigfile.blob ...
+
+    # This will push the changes of bigfile.blob
+    git fit push bigfile.blob
+
+    # Let's assume that someone else updated bigfile.blob
+    git pull origin master
+
+    # This will pull any updated files, including bigfile.blob
+    git fit pull
+
 ## How It Works ##
 
 `git-fit` doesn't use any special git techniques, hooks or features. All
@@ -42,13 +69,6 @@ straight-forward in order to prevent mistakes, and did not feel confident we
 could achieve that with git-annex. But depending on your needs, this may be a
 better fit - especially if you're looking for something more than just fast
 asset management in git.
-
-## Installation ##
-
-    go get github.com/dailymuse/git-fit
-    pushd $GOPATH/src/github.com/dailymuse/git-fit
-    make install
-    popd
 
 ## Usage ##
 
