@@ -77,11 +77,13 @@ asset management in git.
 
 ## Usage ##
 
+#### Init ####
+
 Before using `git-fit` for the first time in a repo, run `git fit init`. This
 will setup the repository to be able to use `git-fit` by adding configs and
 creating a directory for storing cached assets.
 
-### Pulling ###
+#### Pulling ####
 
 Pulling will look at `git-fit.json` to see what versions of assets to pull.
 If there's a cached copy, its contents will simply be copied to the asset's
@@ -92,7 +94,7 @@ managed assets will be pulled. Pull will not overwrite existing files - this
 is to prevent you from accidentally overwriting local changes that are
 unsynced. To overwrite, remove the local copy first.
 
-### Pushing ###
+#### Pushing ####
 
 Pushing will hash the contents of the assets, store them in `git-fit.json`,
 and push them off to S3 and the local cache if they aren't already stored.
@@ -100,13 +102,13 @@ and push them off to S3 and the local cache if they aren't already stored.
 As with pull, you can explicitly pass paths as arguments to push only certain
 files. Otherwise all updated files will be pushed.
 
-### Removing ###
+#### Removing ####
 
 You can remove a file currently managed by `git-fit.json` by using
 `git fit rm <path>`. This will not remove the path from .gitignore, in case
 you still want the asset to not be managed by git.
 
-### GC ###
+#### GC ####
 
 Every once in a while, it's a good idea to run `git fit gc` on a repo. This
 will delete any cached assets that are not currently specified in
