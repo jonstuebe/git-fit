@@ -10,31 +10,31 @@ different commits.
 ## Installation ##
 
 ```bash
-    go get github.com/dailymuse/git-fit
-    pushd $GOPATH/src/github.com/dailymuse/git-fit
-    make install
+go get github.com/dailymuse/git-fit
+pushd $GOPATH/src/github.com/dailymuse/git-fit
+make install
     popd
 ```
 
 ## Example Usage ##
 
 ```bash
-    # Initialize the repo - run this the first time you use git-fit on a repo,
-    # or when you need to reconfigure your S3 credentials/bucket.
-    git fit init
+# Initialize the repo - run this the first time you use git-fit on a repo,
+# or when you need to reconfigure your S3 credentials/bucket.
+git fit init
 
-    # This will add bigfile.blob to git-fit and push the file to S3
-    git fit push bigfile.blob
+# This will add bigfile.blob to git-fit and push the file to S3
+git fit push bigfile.blob
 
-    # ... make some changes to bigfile.blob ...
+# ... make some changes to bigfile.blob ...
 
-    # This will push the changes of bigfile.blob
-    git fit push bigfile.blob
+# This will push the changes of bigfile.blob
+git fit push bigfile.blob
 
-    # Let's assume that someone else updated bigfile.blob
-    git pull origin master
+# Let's assume that someone else updated bigfile.blob
+git pull origin master
 
-    # Pull the updated version of bigfile.blob
+# Pull the updated version of bigfile.blob
     git fit pull bigfile.blob
 ```
 
