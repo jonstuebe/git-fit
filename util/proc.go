@@ -29,5 +29,5 @@ func GitConfig(name string) string {
 }
 
 func SetGitConfig(name string, value string) {
-    Stdout("git", "config", "--add", name, value)
+    Stdout("git", "config", "--replace-all", name, value)
 }
