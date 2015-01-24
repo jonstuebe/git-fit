@@ -32,13 +32,13 @@ func TestIsDirectory(t *testing.T) {
 func TestFileHash(t *testing.T) {
     t.Parallel()
 
-    hash, err := FileHash("../Makefile")
+    hash, err := FileHash("../LICENSE")
 
     if err != nil {
         t.Error(err)
     }
 
-    if hash != "507f2b718e0081baaccfe096f336ac2aaf826873" {
+    if hash != "96856a925efa12f5967f52455734b15fd2695e3a" {
         t.Error()
     }
 
