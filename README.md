@@ -13,7 +13,7 @@ different commits.
 go get github.com/dailymuse/git-fit
 pushd $GOPATH/src/github.com/dailymuse/git-fit
 make install
-    popd
+popd
 ```
 
 ## Example Usage ##
@@ -35,7 +35,7 @@ git fit push bigfile.blob
 git pull origin master
 
 # Pull the updated version of bigfile.blob
-    git fit pull bigfile.blob
+git fit pull bigfile.blob
 ```
 
 ## How It Works ##
