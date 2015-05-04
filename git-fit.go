@@ -95,7 +95,7 @@ func main() {
 		case "gc":
 			cli.Gc(schema, trans, os.Args[2:])
 		default:
-			util.Error("Unknown command")
+			util.Error("Unknown command\n")
 			help(-1)
 		}
 	}

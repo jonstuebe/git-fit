@@ -56,22 +56,21 @@ func TestFileHash(t *testing.T) {
 func TestCopyFile(t *testing.T) {
 	t.Parallel()
 
-	err := CopyFile("../README.md", "temp")
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = os.Remove("temp")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = CopyFile("temp", "temp2")
+	err := CopyFile("from-path/does/not/exist", "to-path/does/not/exist")
+	defer os.RemoveAll("to-path")
 
 	if err == nil {
-		os.Remove("temp2")
+		t.Error("Expected an error")
+	}
+
+	if !IsDirectory("to-path") {
+		t.Error("to-path does not exist")
+	}
+
+	err = CopyFile("../README.md", "temp")
+	defer os.Remove("temp")
+
+	if err != nil {
 		t.Error(err)
 	}
 }

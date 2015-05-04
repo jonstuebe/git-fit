@@ -5,25 +5,26 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
+	"path"
 )
 
-func FileExists(path string) bool {
-	_, err := os.Stat(path)
+func FileExists(p string) bool {
+	_, err := os.Stat(p)
 	return !os.IsNotExist(err)
 }
 
-func IsDirectory(path string) bool {
-	info, err := os.Stat(path)
+func IsDirectory(p string) bool {
+	info, err := os.Stat(p)
 	return err == nil && info.IsDir()
 }
 
-func IsFile(path string) bool {
-	info, err := os.Stat(path)
+func IsFile(p string) bool {
+	info, err := os.Stat(p)
 	return err == nil && !info.IsDir()
 }
 
-func FileHash(path string) (string, error) {
-	file, err := os.Open(path)
+func FileHash(p string) (string, error) {
+	file, err := os.Open(p)
 	h := sha1.New()
 
 	if err != nil {
@@ -40,6 +41,12 @@ func FileHash(path string) (string, error) {
 }
 
 func CopyFile(fromPath string, toPath string) error {
+	err := os.MkdirAll(path.Dir(toPath), os.ModePerm)
+
+	if err != nil {
+		return err
+	}
+
 	in, err := os.Open(fromPath)
 
 	if err != nil {
