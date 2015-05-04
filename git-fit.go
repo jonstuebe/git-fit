@@ -1,19 +1,19 @@
 package main
 
 import (
-    "os"
-    "fmt"
-    "path/filepath"
-    "github.com/mitchellh/goamz/s3"
-    "github.com/mitchellh/goamz/aws"
-    "github.com/dailymuse/git-fit/util"
-    "github.com/dailymuse/git-fit/cli"
-    "github.com/dailymuse/git-fit/transport"
-    "github.com/dailymuse/git-fit/config"
+	"fmt"
+	"github.com/dailymuse/git-fit/cli"
+	"github.com/dailymuse/git-fit/config"
+	"github.com/dailymuse/git-fit/transport"
+	"github.com/dailymuse/git-fit/util"
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/s3"
+	"os"
+	"path/filepath"
 )
 
 func help(code int) {
-    fmt.Printf(`usage: git-fit push|pull|rm|gc
+	fmt.Printf(`usage: git-fit push|pull|rm|gc
 
     init
         Initializes git-fit for a repo by adding the necessary configs.
@@ -37,70 +37,70 @@ func help(code int) {
 
 `)
 
-    os.Exit(code)
+	os.Exit(code)
 }
 
 func affixToGitRepo() {
-    gitDirectory, err := filepath.Abs(util.GitDir())
+	gitDirectory, err := filepath.Abs(util.GitDir())
 
-    if err != nil {
-        util.Fatal("Could not determine the repo root: %s\n", err.Error())
-    } else if !util.IsDirectory(gitDirectory) {
-        util.Fatal("Not in a git repository\n")
-    }
+	if err != nil {
+		util.Fatal("Could not determine the repo root: %s\n", err.Error())
+	} else if !util.IsDirectory(gitDirectory) {
+		util.Fatal("Not in a git repository\n")
+	}
 
-    if err = os.Chdir(filepath.Join(gitDirectory, "..")); err != nil {
-        util.Fatal("Could not change the working directory to the repo root (%s): %s\n", gitDirectory, err.Error())
-    }
+	if err = os.Chdir(filepath.Join(gitDirectory, "..")); err != nil {
+		util.Fatal("Could not change the working directory to the repo root (%s): %s\n", gitDirectory, err.Error())
+	}
 }
 
 func getTransport() transport.Transport {
-    auth, err := aws.GetAuth(util.GitConfig("git-fit.aws.access-key"), util.GitConfig("git-fit.aws.secret-key"))
+	auth, err := aws.GetAuth(util.GitConfig("git-fit.aws.access-key"), util.GitConfig("git-fit.aws.secret-key"))
 
-    if err != nil {
-        util.Fatal("AWS authentication failed: %s\n", err.Error())
-    }
+	if err != nil {
+		util.Fatal("AWS authentication failed: %s\n", err.Error())
+	}
 
-    bucket := s3.New(auth, aws.USEast).Bucket(util.GitConfig("git-fit.aws.bucket"))
-    return transport.NewS3Transport(bucket)
+	bucket := s3.New(auth, aws.USEast).Bucket(util.GitConfig("git-fit.aws.bucket"))
+	return transport.NewS3Transport(bucket)
 }
 
 func main() {
-    if len(os.Args) < 2 {
-        help(0)
-    }
+	if len(os.Args) < 2 {
+		help(0)
+	}
 
-    affixToGitRepo()
+	affixToGitRepo()
 
-    schema, err := config.LoadConfig()
+	schema, err := config.LoadConfig()
 
-    if err != nil {
-        util.Fatal("Could not load config file %s: %s\n", config.FILE_PATH, err.Error())
-    }
+	if err != nil {
+		util.Fatal("Could not load config file %s: %s\n", config.FILE_PATH, err.Error())
+	}
 
-    if os.Args[1] == "init" {
-        cli.Init()
-    } else {
-        trans := getTransport()
+	if os.Args[1] == "init" {
+		cli.Init()
+	} else {
+		trans := getTransport()
 
-        switch os.Args[1] {
-        case "help":
-            help(0)
-        case "push":
-            cli.Push(schema, trans, os.Args[2:])
-        case "rm":
-            cli.Remove(schema, trans, os.Args[2:])
-        case "pull":
-            cli.Pull(schema, trans, os.Args[2:])
-        case "gc":
-            cli.Gc(schema, trans, os.Args[2:])
-        default:
-            util.Error("Unknown command")
-            help(-1)
-        }
-    }
+		switch os.Args[1] {
+		case "help":
+			help(0)
+		case "push":
+			cli.Push(schema, trans, os.Args[2:])
+		case "rm":
+			cli.Remove(schema, trans, os.Args[2:])
+		case "pull":
+			cli.Pull(schema, trans, os.Args[2:])
+		case "gc":
+			cli.Gc(schema, trans, os.Args[2:])
+		default:
+			util.Error("Unknown command")
+			help(-1)
+		}
+	}
 
-    if err = config.SaveConfig(schema); err != nil {
-        util.Fatal("Could not save config file %s: %s\n", config.FILE_PATH, err.Error())
-    }
+	if err = config.SaveConfig(schema); err != nil {
+		util.Fatal("Could not save config file %s: %s\n", config.FILE_PATH, err.Error())
+	}
 }
