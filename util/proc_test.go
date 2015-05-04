@@ -1,27 +1,27 @@
 package util
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestStdout(t *testing.T) {
-    t.Parallel()
+	t.Parallel()
 
-    results := Stdout("echo", "hi")
+	results := Stdout("echo", "hi")
 
-    if results != "hi" {
-        t.Fail()
-    }
+	if results != "hi" {
+		t.Fail()
+	}
 }
 
 // For the next two functions, just make sure they don't panic, as they could
 // have different outputs depending on the context
 func TestGitDir(t *testing.T) {
-    t.Parallel()
-    GitDir()
+	t.Parallel()
+	GitDir()
 }
 
 func TestGitConfig(t *testing.T) {
-    t.Parallel()
-    GitConfig("foo")
+	t.Parallel()
+	GitConfig("foo")
 }

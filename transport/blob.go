@@ -1,19 +1,19 @@
 package transport
 
 import (
-    "fmt"
+	"fmt"
 )
 
 type Blob struct {
-    Hash string
+	Hash string
 }
 
 func NewBlob(hash string) Blob {
-    return Blob {
-        Hash: hash,
-    }
+	return Blob{
+		Hash: hash,
+	}
 }
 
 func (self Blob) Path() string {
-    return fmt.Sprintf(".git/fit/%s", self.Hash)
+	return fmt.Sprintf(".git/fit/%s", self.Hash)
 }
