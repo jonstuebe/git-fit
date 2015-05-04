@@ -35,6 +35,10 @@ func help(code int) {
         This will save space, but may slow down future pulls while the cache
         is warming back up.
 
+    status [file 1] ... [file n]
+        Gets the status of the specified files. If no arguments are given, the
+        status is fetched for all files in git-fit.json.
+
 `)
 
 	os.Exit(code)
@@ -94,6 +98,8 @@ func main() {
 			cli.Pull(schema, trans, os.Args[2:])
 		case "gc":
 			cli.Gc(schema, trans, os.Args[2:])
+		case "status":
+			cli.Status(schema, trans, os.Args[2:])
 		default:
 			util.Error("Unknown command\n")
 			help(-1)

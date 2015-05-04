@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"github.com/cheggaaa/pb"
 	"github.com/dailymuse/git-fit/transport"
 	"github.com/dailymuse/git-fit/util"
@@ -78,9 +77,9 @@ func handleResponse(ch chan operationResponse, fileCount int) []operationRespons
 
 				for _, status := range statuses {
 					if status.IsErrored() {
-						util.Error(fmt.Sprintf("%s: %s\n", status.Path, status.Err))
+						util.Error("%s: %s\n", status.Path, status.Err)
 					} else {
-						util.Message(fmt.Sprintf("%s: Synced\n", status.Path))
+						util.Message("%s: Synced\n", status.Path)
 						successful = append(successful, status)
 					}
 				}
