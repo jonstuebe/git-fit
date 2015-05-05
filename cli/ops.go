@@ -79,7 +79,6 @@ func handleResponse(ch chan operationResponse, fileCount int) []operationRespons
 					if status.IsErrored() {
 						util.Error("%s: %s\n", status.Path, status.Err)
 					} else {
-						util.Message("%s: Synced\n", status.Path)
 						successful = append(successful, status)
 					}
 				}
