@@ -1,4 +1,4 @@
-# git-fit #
+# git-fit [![Build Status](https://travis-ci.org/dailymuse/git-fit.png)](https://travis-ci.org/dailymuse/git-fit) #
 
 ## About ##
 
