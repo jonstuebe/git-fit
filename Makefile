@@ -9,6 +9,7 @@ install: build
 deps:
 	go get -u github.com/mitchellh/goamz/aws
 	go get -u github.com/mitchellh/goamz/s3
+	go get -u github.com/cheggaaa/pb
 
 unittests:
 	go test github.com/dailymuse/git-fit/transport github.com/dailymuse/git-fit/util
