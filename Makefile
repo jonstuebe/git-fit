@@ -14,3 +14,5 @@ unittests:
 
 integrationtests: install
 	./integration.py; rm -rf integration
+
+test: unittests integrationtests
