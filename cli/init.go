@@ -25,10 +25,22 @@ func getStdinString(prompt string, def string) string {
 	return in
 }
 
-func Init() {
-	awsAccessKey := getStdinString("Enter your AWS access key", util.GitConfig("git-fit.aws.access-key"))
-	awsSecretKey := getStdinString("Enter your AWS secret key", util.GitConfig("git-fit.aws.secret-key"))
-	awsBucket := getStdinString("Enter your AWS S3 bucket", util.GitConfig("git-fit.aws.bucket"))
+func Init(args []string) {
+	awsAccessKey := ""
+	awsSecretKey := ""
+	awsBucket := ""
+
+	if len(args) > 0 && args[0] == "env" {
+		// Configure via environment variables
+		awsAccessKey = os.Getenv("AWS_ACCESS_KEY_ID")
+		awsSecretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
+		awsBucket = os.Getenv("AWS_S3_BUCKET")
+	} else {
+		// Configure via stdin
+		awsAccessKey = getStdinString("Enter your AWS access key", util.GitConfig("git-fit.aws.access-key"))
+		awsSecretKey = getStdinString("Enter your AWS secret key", util.GitConfig("git-fit.aws.secret-key"))
+		awsBucket = getStdinString("Enter your AWS S3 bucket", util.GitConfig("git-fit.aws.bucket"))
+	}
 
 	util.SetGitConfig("git-fit.aws.access-key", awsAccessKey)
 	util.SetGitConfig("git-fit.aws.secret-key", awsSecretKey)

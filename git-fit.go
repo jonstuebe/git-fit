@@ -83,7 +83,7 @@ func main() {
 	}
 
 	if os.Args[1] == "init" {
-		cli.Init()
+		cli.Init(os.Args[2:])
 	} else {
 		trans := getTransport()
 
