@@ -60,28 +60,37 @@ def main():
     os.mkdir("integration")
     os.chdir("integration")
     run("git init")
-    run("git fit init")
+
+    if os.environ.get("GIT_FIT_AUTOINIT") == "true":
+        # Circumvent execution of `git fit init` and instead set everything
+        # up manually, using environment variables to configure things. This
+        # is useful for automated testing environments, e.g. CI.
+        run("../git-fit init env")
+    else:
+        # Otherwise run the normal git fit init process
+        run("../git-fit init")
+    
     ensure_gitignore()
     ensure_spec(dict(version=1, files={}))
 
     print "# Pull/push nothing - should be a no-op"
-    run("git fit pull")
-    run("git fit push")
+    run("../git-fit pull")
+    run("../git-fit push")
     ensure_gitignore()
     ensure_spec(dict(version=1, files={}))
 
     print "# Push the files"
     set_contents("emptyfile", "")
     set_helloworld("hello world 1")
-    run("git fit push emptyfile helloworld")
+    run("../git-fit push emptyfile helloworld")
     check_full_gitignore()
     check_full_spec("96e58c52e52b5f3bcb307d3309264d420b60403c")
     ensure_emptyfile()
     ensure_helloworld("hello world 1")
 
     print "# Pull the existing files - should be no-ops"
-    run("git fit pull")
-    run("git fit pull emptyfile helloworld")
+    run("../git-fit pull")
+    run("../git-fit pull emptyfile helloworld")
     check_full_gitignore()
     check_full_spec("96e58c52e52b5f3bcb307d3309264d420b60403c")
     ensure_emptyfile()
@@ -92,21 +101,21 @@ def main():
     set_helloworld("hello world 2")
 
     print "# Pull the files - should replace emptyfile and skip helloworld"
-    run("git fit pull")
+    run("../git-fit pull")
     check_full_gitignore()
     check_full_spec("96e58c52e52b5f3bcb307d3309264d420b60403c")
     ensure_emptyfile()
     ensure_helloworld("hello world 2")
 
     print "# Pull helloworld explicitly - should still not replace it"
-    run("git fit pull helloworld")
+    run("../git-fit pull helloworld")
     check_full_gitignore()
     check_full_spec("96e58c52e52b5f3bcb307d3309264d420b60403c")
     ensure_emptyfile()
     ensure_helloworld("hello world 2")
 
     print "# Push the change"
-    run("git fit push")
+    run("../git-fit push")
     check_full_gitignore()
     check_full_spec("42ad4ff8bdd0125e98eeaa23146d7899ee77577e")
     ensure_emptyfile()
@@ -114,14 +123,14 @@ def main():
 
     print "# Remove/re-pull - should still be the new contents"
     run("rm helloworld")
-    run("git fit pull")
+    run("../git-fit pull")
     check_full_gitignore()
     check_full_spec("42ad4ff8bdd0125e98eeaa23146d7899ee77577e")
     ensure_emptyfile()
     ensure_helloworld("hello world 2")
 
     print "# Remove emptyfile from gf"
-    run("git fit rm emptyfile")
+    run("../git-fit rm emptyfile")
     check_full_gitignore()
     ensure_spec(dict(version=1, files={"helloworld": "42ad4ff8bdd0125e98eeaa23146d7899ee77577e"}))
     ensure_emptyfile()
@@ -129,7 +138,7 @@ def main():
 
     print "# Run gc and check before/after contents"
     ensure_dir(".git/fit", "da39a3ee5e6b4b0d3255bfef95601890afd80709", "96e58c52e52b5f3bcb307d3309264d420b60403c", "42ad4ff8bdd0125e98eeaa23146d7899ee77577e")
-    run("git fit gc")
+    run("../git-fit gc")
     ensure_dir(".git/fit", "42ad4ff8bdd0125e98eeaa23146d7899ee77577e")
 
 if __name__ == "__main__":
