@@ -1,0 +1,9 @@
+language: go
+install: make deps
+script: make test
+env:
+  - GIT_FIT_AUTOINIT=true
+  matrix:
+  - secure: fWtz5z5PJ7XdNPhlu7+AgcL6+vnHdIaC+Fu864RkKHctSGIST3H2/eaXWTOjEqcyWp/8WRtub9peYqYPNvGjP+wiif0RAJWBo+Yei6/4otFRgIJZpvb+tn7qgIsbLSGnqN5oRqk/k6Bou0X0u+xjb4jOZSNJTiia4m8H9flV3BA=
+  - secure: AEC/E8qeWBIQGCmNudRReHL+f0QYAVykgtUVlYwNQ3+3YcWrPH/aB33X+uRHljiStpRxKa4UTZSRLgR5so1u4PJndAM3xM/elrLJA/bzRUvQ8+OjRqLvzd6Yb8iVl67k947AeOzJutfUfw8P8t8pGZvLmXx44hPIQSwh756kKxQ=
+  - secure: OuThvvDxB/4O367R7mWVDJBSGkZqBRfqXqCdbx40+bGDrLHQCtoyMqWlvJ+gKk733DSEycDKsG6h5hPXv4YRNrBRf/8yh3gzrWi5/2/bsDJnVXAnbZ3pFCCrrJwK/UOVXuVY8QZ86jyGzgHR1cj8vV2TlZUpxIfIrDomyk2EzyY=
