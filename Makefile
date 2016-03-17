@@ -14,7 +14,7 @@ deps:
 unittests:
 	go test github.com/dailymuse/git-fit/transport github.com/dailymuse/git-fit/util
 
-integrationtests: install
+integrationtests:
 	./integration.py; rm -rf integration
 
 test: unittests integrationtests
