@@ -65,7 +65,7 @@ func getTransport() transport.Transport {
 		util.Fatal("AWS authentication failed: %s\n", err.Error())
 	}
 
-	bucket := s3.New(auth, aws.USEast).Bucket(util.GitConfig("git-fit.aws.bucket"))
+	bucket := s3.New(auth, aws.Regions[util.GitConfig("git-fit.aws.region")]).Bucket(util.GitConfig("git-fit.aws.bucket"))
 	return transport.NewS3Transport(bucket)
 }
 

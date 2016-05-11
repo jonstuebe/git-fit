@@ -35,16 +35,19 @@ func Init(args []string) {
 		awsAccessKey = os.Getenv("AWS_ACCESS_KEY_ID")
 		awsSecretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 		awsBucket = os.Getenv("AWS_S3_BUCKET")
+		awsRegion = os.Getenv("AWS_S3_REGION")
 	} else {
 		// Configure via stdin
 		awsAccessKey = getStdinString("Enter your AWS access key", util.GitConfig("git-fit.aws.access-key"))
 		awsSecretKey = getStdinString("Enter your AWS secret key", util.GitConfig("git-fit.aws.secret-key"))
 		awsBucket = getStdinString("Enter your AWS S3 bucket", util.GitConfig("git-fit.aws.bucket"))
+		awsRegion := getStdinString("Enter your AWS S3 bucket region", util.GitConfig("git-fit.aws.region"))
 	}
 
 	util.SetGitConfig("git-fit.aws.access-key", awsAccessKey)
 	util.SetGitConfig("git-fit.aws.secret-key", awsSecretKey)
 	util.SetGitConfig("git-fit.aws.bucket", awsBucket)
+	util.SetGitConfig("git-fit.aws.region", awsRegion)
 
 	err := os.MkdirAll(".git/fit", os.ModePerm)
 
